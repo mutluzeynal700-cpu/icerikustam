@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>İçerikUstam</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body { font-family: system-ui; background:#f5f5f5; margin:0; }
+.container { max-width:600px; margin:40px auto; background:white; padding:25px; border-radius:12px; }
+h1 { text-align:center; }
+select, textarea, button { width:100%; padding:12px; margin:8px 0; font-size:16px; }
+button { background:black; color:white; border:none; border-radius:8px; }
+#result { background:#f1f1f1; padding:15px; margin-top:10px; border-radius:8px; }
+.limit { font-size:14px; color:#666; text-align:center; }
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>İçerikUstam</h1>
+<div class="limit" id="limitInfo"></div>
+
+<select id="business">
+<option value="emlak">Emlak</option>
+<option value="guzellik">Güzellik</option>
+<option value="butik">Butik</option>
+<option value="kafe">Kafe</option>
+</select>
+
+<select id="type">
+<option value="post">Instagram Post</option>
+<option value="reels">Reels Metni</option>
+<option value="reklam">Reklam Metni</option>
+<option value="dm">DM Cevabı</option>
+</select>
+
+<textarea id="input" placeholder="Ürün veya kampanya bilgisi"></textarea>
+<button onclick="generate()">İçerik Üret</button>
+
+<div id="result"></div>
+
+</div>
+
+<script>
+const supabase = window.supabase.createClient(
+"https://leszbkxssduuoytxdjii.supabase.co",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxlc3pia3hzc2R1dW95dHhkamlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNzE2NTYsImV4cCI6MjA4Njg0NzY1Nn0.9pooVdILqrtVEXLQ2LmXHkf8jp7epkwaJhMfz6BEfus"
+);
+
+let currentUser;
+
+async function initUser() {
+  const email = "guest@icerikustam.com";
+
+  let { data } = await supabase.from("users").select("*").eq("email", email).single();
+
+  if (!data) {
+    const { data: newUser } = await supabase.from("users").insert({ email }).select().single();
+    currentUser = newUser;
+  } else {
+    currentUser = data;
+  }
+
+  checkDailyReset();
+  updateLimitUI();
+}
+
+async function checkDailyReset() {
+  const today = new Date().toISOString().split("T")[0];
+
+  if (currentUser.usage_date !== today) {
+    await supabase.from("users")
+      .update({ daily_usage: 0, usage_date: today })
+      .eq("id", currentUser.id);
+
+    currentUser.daily_usage = 0;
+    currentUser.usage_date = today;
+  }
+}
+
+function updateLimitUI() {
+  if (currentUser.plan_type === "premium") {
+    document.getElementById("limitInfo").innerText = "Premium kullanıcı — sınırsız kullanım";
+  } else {
+    document.getElementById("limitInfo").innerText =
+      "Bugün kalan kullanım: " + (3 - currentUser.daily_usage);
+  }
+}
+
+async function generate() {
+
+  if (currentUser.plan_type !== "premium" && currentUser.daily_usage >= 3) {
+    alert("Günlük limit doldu. Premium’a geç.");
+    return;
+  }
+
+  const business = document.getElementById("business").value;
+  const type = document.getElementById("type").value;
+  const input = document.getElementById("input").value;
+
+  const prompt = `
+İş kolu: ${business}
+İçerik türü: ${type}
+Bilgi: ${input}
+Türkçe, satış odaklı sosyal medya metni yaz.
+Hashtag ekle.
+`;
+
+  // BURAYA GERÇEK AI API ÇAĞRISI EKLENECEK
+  const aiText = "AI çıktısı burada görünecek.";
+
+  document.getElementById("result").innerText = aiText;
+
+  await supabase.from("generations").insert({
+    user_id: currentUser.id,
+    business_type: business,
+    content_type: type,
+    input_text: input,
+    output_text: aiText
+  });
+
+  if (currentUser.plan_type !== "premium") {
+    currentUser.daily_usage++;
+    await supabase.from("users")
+      .update({ daily_usage: currentUser.daily_usage })
+      .eq("id", currentUser.id);
+  }
+
+  updateLimitUI();
+}
+
+initUser();
+</script>
+
+</body>
+</html>
