@@ -9,22 +9,22 @@
 body{
 margin:0;
 font-family:Arial;
-background:linear-gradient(135deg,#020617,#1e3a8a);
+background:linear-gradient(135deg,#020617,#1e3a8a,#312e81);
 color:white;
 display:flex;
 justify-content:center;
 align-items:center;
-height:100vh;
+min-height:100vh;
 }
 
 .box{
 background:rgba(255,255,255,0.08);
 padding:30px;
 border-radius:20px;
-width:340px;
+width:360px;
 }
 
-input,button{
+input,select,button{
 width:100%;
 padding:12px;
 margin-top:10px;
@@ -40,6 +40,13 @@ cursor:pointer;
 }
 
 .hidden{display:none}
+
+.item{
+background:rgba(255,255,255,0.05);
+padding:10px;
+border-radius:10px;
+margin-top:8px;
+}
 </style>
 </head>
 
@@ -47,14 +54,16 @@ cursor:pointer;
 
 <div class="box">
 
+<!-- LOGIN -->
 <div id="loginBox">
-<h2>Giriş</h2>
+<h2>İçerikUstam 🚀</h2>
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Şifre">
 <button id="loginBtn">Giriş Yap</button>
 <button id="goRegister">Kayıt Ol</button>
 </div>
 
+<!-- REGISTER -->
 <div id="registerBox" class="hidden">
 <h2>Kayıt</h2>
 <input id="rEmail" placeholder="Email">
@@ -63,9 +72,39 @@ cursor:pointer;
 <button id="goLogin">Geri</button>
 </div>
 
+<!-- USER PANEL -->
 <div id="appBox" class="hidden">
-<h2>Hoşgeldin 🎉</h2>
-<button id="logoutBtn">Çıkış</button>
+
+<h2>Panel 🎯</h2>
+
+<input id="topic" placeholder="Konu">
+<select id="platform">
+<option>TikTok</option>
+<option>Instagram</option>
+<option>YouTube</option>
+</select>
+
+<button id="produceBtn">İçerik Üret</button>
+
+<h3>Premium Paketler</h3>
+
+<div class="item">
+Starter — 49₺
+<button onclick="buyPremium()">Satın Al</button>
+</div>
+
+<h3>İçeriklerim</h3>
+<div id="saved"></div>
+
+<button id="logoutBtn" style="background:#ef4444">Çıkış</button>
+
+</div>
+
+<!-- ADMIN -->
+<div id="adminBox" class="hidden">
+<h2>Admin Panel 👑</h2>
+<div id="userList"></div>
+<button id="logoutBtn2" style="background:#ef4444">Çıkış</button>
 </div>
 
 </div>
@@ -78,9 +117,13 @@ const supabase = createClient(
 "sb_publishable_mHIjYnEg9y7HVtBPY_Zr0w_6BcbGNTd"
 )
 
-const loginBox = document.getElementById("loginBox")
-const registerBox = document.getElementById("registerBox")
-const appBox = document.getElementById("appBox")
+const ADMIN_EMAIL="mslmcanlii@gmail.com"
+
+const loginBox=document.getElementById("loginBox")
+const registerBox=document.getElementById("registerBox")
+const appBox=document.getElementById("appBox")
+const adminBox=document.getElementById("adminBox")
+const saved=document.getElementById("saved")
 
 document.getElementById("goRegister").onclick=()=>{
 loginBox.classList.add("hidden")
@@ -97,8 +140,7 @@ const email=document.getElementById("rEmail").value
 const password=document.getElementById("rPassword").value
 
 const {error}=await supabase.auth.signUp({
-email,
-password,
+email,password,
 options:{emailRedirectTo:window.location.origin}
 })
 
@@ -110,7 +152,6 @@ const email=document.getElementById("email").value
 const password=document.getElementById("password").value
 
 const {data,error}=await supabase.auth.signInWithPassword({email,password})
-
 if(error){alert(error.message);return}
 
 if(!data.user.email_confirmed_at){
@@ -119,11 +160,116 @@ await supabase.auth.signOut()
 return
 }
 
-loginBox.classList.add("hidden")
-appBox.classList.remove("hidden")
+startApp(data.user)
 }
 
-document.getElementById("logoutBtn").onclick = async ()=>{
+async function startApp(user){
+
+loginBox.classList.add("hidden")
+
+if(user.email===ADMIN_EMAIL){
+adminBox.classList.remove("hidden")
+loadUsers()
+}else{
+appBox.classList.remove("hidden")
+loadContents()
+}
+}
+
+function getLocalProfile(userId){
+let data=localStorage.getItem("profile_"+userId)
+if(!data){
+data={premium:false,count:0,date:new Date().toDateString()}
+localStorage.setItem("profile_"+userId,JSON.stringify(data))
+return data
+}
+return JSON.parse(data)
+}
+
+function saveLocalProfile(userId,data){
+localStorage.setItem("profile_"+userId,JSON.stringify(data))
+}
+
+function tiktokTitle(topic){
+const hooks=[
+"Kimse Bunu Bilmiyor 😳",
+"Hayatını Değiştirir",
+"Bu Taktik Yasaklanmalı",
+"Denemeden Geçme",
+"Gerçekten İşe Yarıyor"
+]
+return hooks[Math.floor(Math.random()*hooks.length)]+" → "+topic
+}
+
+document.getElementById("produceBtn").onclick = async () => {
+
+const topic=document.getElementById("topic").value
+const platform=document.getElementById("platform").value
+
+const {data:{user}}=await supabase.auth.getUser()
+let profile=getLocalProfile(user.id)
+
+const today=new Date().toDateString()
+
+if(profile.date!==today){
+profile.count=0
+profile.date=today
+}
+
+if(!profile.premium && profile.count>=1){
+alert("Günlük ücretsiz limit doldu")
+return
+}
+
+let text = platform==="TikTok"
+? tiktokTitle(topic)
+: topic+" için "+platform+" içeriği"
+
+await supabase.from("contents").insert({
+user_id:user.id,
+text:text
+})
+
+profile.count++
+saveLocalProfile(user.id,profile)
+
+loadContents()
+}
+
+async function loadContents(){
+const {data:{user}}=await supabase.auth.getUser()
+
+const {data}=await supabase
+.from("contents")
+.select("*")
+.eq("user_id",user.id)
+.order("id",{ascending:false})
+
+saved.innerHTML=""
+data?.forEach(i=>{
+saved.innerHTML+=<div class="item">${i.text}</div>
+})
+}
+
+window.buyPremium = async ()=>{
+const {data:{user}}=await supabase.auth.getUser()
+let profile=getLocalProfile(user.id)
+profile.premium=true
+saveLocalProfile(user.id,profile)
+alert("Premium aktif 🎉")
+}
+
+async function loadUsers(){
+const {data}=await supabase.from("contents").select("*")
+document.getElementById("userList").innerHTML="Toplam içerik: "+(data?.length||0)
+}
+
+document.getElementById("logoutBtn").onclick=async()=>{
+await supabase.auth.signOut()
+location.reload()
+}
+
+document.getElementById("logoutBtn2").onclick=async()=>{
 await supabase.auth.signOut()
 location.reload()
 }
