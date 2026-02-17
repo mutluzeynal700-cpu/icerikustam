@@ -3,71 +3,69 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>İçerikUstam AI</title>
+<title>İçerikUstam</title>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
-body{height:100vh;background:radial-gradient(circle at 20% 20%,#1e3a8a,#020617 60%);color:white;display:flex;justify-content:center;align-items:center}
-.app{width:95%;max-width:900px;background:rgba(255,255,255,0.06);backdrop-filter:blur(25px);border-radius:26px;padding:30px}
-.logo{font-size:34px;font-weight:800;text-align:center;margin-bottom:25px;background:linear-gradient(90deg,#22c55e,#06b6d4,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.panel{display:none}.active{display:block}
-.card{background:rgba(255,255,255,0.05);padding:18px;border-radius:18px;margin-bottom:15px}
-input,select,textarea{width:100%;padding:14px;border:none;border-radius:12px;background:rgba(0,0,0,0.5);color:white;margin-top:8px}
-button{width:100%;padding:15px;border:none;border-radius:14px;font-weight:700;cursor:pointer;margin-top:12px;background:linear-gradient(90deg,#22c55e,#06b6d4);color:white}
-.result{margin-top:18px;padding:18px;border-radius:14px;background:rgba(0,0,0,0.6);min-height:120px;white-space:pre-wrap}
-.topbar{display:flex;justify-content:space-between;margin-bottom:15px}
+body{
+margin:0;
+font-family:Arial, sans-serif;
+background:linear-gradient(135deg,#1e3a8a,#020617);
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
+
+.box{
+background:rgba(255,255,255,0.08);
+padding:30px;
+border-radius:20px;
+width:350px;
+}
+
+input,button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:10px;
+}
+
+button{
+background:#22c55e;
+color:white;
+font-weight:bold;
+cursor:pointer;
+}
+
+.hidden{display:none}
 </style>
 </head>
 
 <body>
 
-<div class="app">
-<div class="logo">İçerikUstam AI</div>
+<div class="box">
 
-<div id="login" class="panel active">
-<div class="card">
-Giriş Yap
+<div id="loginBox">
+<h2>Giriş</h2>
 <input id="email" placeholder="Email">
-<input id="pass" type="password" placeholder="Şifre">
-<button onclick="login()">Giriş</button>
-<button onclick="show('register')">Kayıt Ol</button>
-</div>
+<input id="password" type="password" placeholder="Şifre">
+<button id="loginBtn">Giriş Yap</button>
+<button onclick="showRegister()">Kayıt Ol</button>
 </div>
 
-<div id="register" class="panel">
-<div class="card">
-Kayıt Ol
+<div id="registerBox" class="hidden">
+<h2>Kayıt</h2>
 <input id="rEmail" placeholder="Email">
-<input id="rPass" type="password" placeholder="Şifre">
-<button onclick="register()">Hesap Oluştur</button>
-<button onclick="show('login')">Geri</button>
-</div>
-</div>
-
-<div id="app" class="panel">
-<div class="topbar">
-<div id="userEmail"></div>
-<div id="planBadge">FREE</div>
+<input id="rPassword" type="password" placeholder="Şifre">
+<button id="registerBtn">Kayıt Ol</button>
+<button onclick="showLogin()">Geri</button>
 </div>
 
-<div class="card">
-<select id="type">
-<option>Instagram Post</option>
-<option>TikTok Video Script</option>
-<option>YouTube Başlık</option>
-<option>Reklam Metni</option>
-<option>Ürün Açıklaması</option>
-</select>
-</div>
-
-<div class="card">
-<input id="topic" placeholder="Konu">
-<textarea id="detail" placeholder="Detay"></textarea>
-<button onclick="generate()">AI İçerik Üret</button>
-</div>
-
-<div class="result" id="result"></div>
-<button onclick="logout()">Çıkış</button>
+<div id="appBox" class="hidden">
+<h2>Hoşgeldin 🎉</h2>
+<button id="logoutBtn">Çıkış</button>
 </div>
 
 </div>
@@ -77,79 +75,58 @@ Kayıt Ol
 <script>
 const SUPABASE_URL = "https://leszbkxssduuoytxdjii.supabase.co";
 const SUPABASE_KEY = "sb_publishable_mHIjYnEg9y7HVtBPY_Zr0w_6BcbGNTd";
-const OPENAI_API_KEY = "BURAYA_OPENAI_KEY";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-let currentUser = null;
 
-function show(id){
-document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
-document.getElementById(id).classList.add("active");
+function showRegister(){
+document.getElementById("loginBox").classList.add("hidden");
+document.getElementById("registerBox").classList.remove("hidden");
 }
 
-async function register(){
-const emailVal = document.getElementById("rEmail").value;
-const passVal = document.getElementById("rPass").value;
+function showLogin(){
+document.getElementById("registerBox").classList.add("hidden");
+document.getElementById("loginBox").classList.remove("hidden");
+}
 
-const {error} = await supabase.auth.signUp({
-email: emailVal,
-password: passVal,
+document.getElementById("registerBtn").onclick = async () => {
+const email = document.getElementById("rEmail").value;
+const pass = document.getElementById("rPassword").value;
+
+const { error } = await supabase.auth.signUp({
+email: email,
+password: pass,
 options:{ emailRedirectTo: window.location.origin }
 });
 
 if(error) alert(error.message);
-else{
-alert("Mailine onay linki gönderildi");
-show("login");
-}
-}
+else alert("Mailine onay gönderildi");
+};
 
-async function login(){
-const emailVal = document.getElementById("email").value;
-const passVal = document.getElementById("pass").value;
+document.getElementById("loginBtn").onclick = async () => {
+const email = document.getElementById("email").value;
+const pass = document.getElementById("password").value;
 
-const {data,error} = await supabase.auth.signInWithPassword({
-email: emailVal,
-password: passVal
+const { data, error } = await supabase.auth.signInWithPassword({
+email: email,
+password: pass
 });
 
 if(error){ alert(error.message); return; }
 
 if(!data.user.email_confirmed_at){
-alert("Mail onayı gerekli");
+alert("Önce mail onayı yap");
 await supabase.auth.signOut();
 return;
 }
 
-currentUser = data.user;
-document.getElementById("userEmail").innerText = currentUser.email;
-show("app");
-}
+document.getElementById("loginBox").classList.add("hidden");
+document.getElementById("appBox").classList.remove("hidden");
+};
 
-async function generate(){
-const prompt = ${type.value} için içerik üret: ${topic.value} ${detail.value};
-
-const res = await fetch("https://api.openai.com/v1/chat/completions",{
-method:"POST",
-headers:{
-"Content-Type":"application/json",
-"Authorization":"Bearer "+OPENAI_API_KEY
-},
-body:JSON.stringify({
-model:"gpt-4.1-mini",
-messages:[{role:"user",content:prompt}]
-})
-});
-
-const json = await res.json();
-document.getElementById("result").innerText =
-json.choices?.[0]?.message?.content || "AI cevap vermedi";
-}
-
-async function logout(){
+document.getElementById("logoutBtn").onclick = async () => {
 await supabase.auth.signOut();
 location.reload();
-}
+};
 </script>
 
 </body>
