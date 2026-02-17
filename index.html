@@ -1,3 +1,4 @@
+<!-- İÇERİKUSTAM FULL SİSTEM -->
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -8,12 +9,15 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body{margin:0;font-family:sans-serif;background:#020617;color:white;display:flex;justify-content:center;align-items:center;height:100vh}
-.app{width:95%;max-width:900px;background:#111827;padding:25px;border-radius:20px}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+body{height:100vh;background:#020617;color:white;display:flex;justify-content:center;align-items:center}
+.app{width:95%;max-width:1000px;background:rgba(255,255,255,0.06);padding:30px;border-radius:26px}
 .card{margin-bottom:15px}
-input,select,textarea{width:100%;padding:12px;border-radius:10px;border:none;background:#0f172a;color:white;margin-top:8px}
-button{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(90deg,#22c55e,#06b6d4);color:white;font-weight:700;margin-top:10px}
-.result{margin-top:15px;padding:15px;background:#020617;border-radius:10px}
+input,select,textarea{width:100%;padding:14px;border:none;border-radius:12px;background:#0f172a;color:white;margin-top:8px}
+button{width:100%;padding:15px;border:none;border-radius:14px;font-weight:700;margin-top:10px;background:linear-gradient(90deg,#22c55e,#06b6d4);color:white}
+.result{margin-top:18px;padding:18px;border-radius:14px;background:#020617;white-space:pre-wrap}
+.panel{display:none}
+.active{display:block}
 </style>
 </head>
 
@@ -21,40 +25,40 @@ button{width:100%;padding:14px;border:none;border-radius:12px;background:linear-
 
 <div class="app">
 
-<div id="login">
+<div id="login" class="panel active">
 <div class="card">
-Giriş
+Giriş Yap
 <input id="email" placeholder="Email">
 <input id="pass" type="password" placeholder="Şifre">
 <button onclick="login()">Giriş</button>
-<button onclick="showRegister()">Kayıt Ol</button>
+<button onclick="show('register')">Kayıt Ol</button>
 </div>
 </div>
 
-<div id="register" style="display:none">
+<div id="register" class="panel">
 <div class="card">
-Kayıt
+Kayıt Ol
 <input id="rEmail" placeholder="Email">
 <input id="rPass" type="password" placeholder="Şifre">
 <button onclick="register()">Hesap Oluştur</button>
-<button onclick="showLogin()">Geri</button>
+<button onclick="show('login')">Geri</button>
 </div>
 </div>
 
-<div id="app" style="display:none">
+<div id="app" class="panel">
 
 <select id="type">
 <option>Instagram Post</option>
 <option>TikTok Video Script</option>
 <option>Reklam Metni</option>
 <option>Ürün Açıklaması</option>
+<option>YouTube Başlık</option>
 </select>
 
 <input id="topic" placeholder="Konu">
 <textarea id="detail" placeholder="Detay"></textarea>
 
 <button onclick="generate()">AI İçerik Üret</button>
-
 <div class="result" id="result"></div>
 <button onclick="logout()">Çıkış</button>
 
@@ -65,26 +69,28 @@ Kayıt
 <script>
 const SUPABASE_URL="https://leszbkxssduuoytxdjii.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxlc3pia3hzc2R1dW95dHhkamlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNzE2NTYsImV4cCI6MjA4Njg0NzY1Nn0.9pooVdILqrtVEXLQ2LmXHkf8jp7epkwaJhMfz6BEfus";
-const OPENAI_API_KEY="OPENAI_KEY";
+const OPENAI_API_KEY="OPENAI_API_KEY";
 
 const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 let currentUser=null;
 
-function showRegister(){login.style.display="none";register.style.display="block"}
-function showLogin(){login.style.display="block";register.style.display="none"}
+function show(id){
+document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
 
 async function register(){
-const {error}=await supabase.auth.signUp({
+const { error } = await supabase.auth.signUp({
 email:rEmail.value,
 password:rPass.value,
-options:{emailRedirectTo:location.origin}
+options:{emailRedirectTo:"https://icerikustam.vercel.app"}
 });
 if(error) alert(error.message);
-else alert("Mailini onayla sonra giriş yap");
+else alert("Mailine onay linki gönderildi");
 }
 
 async function login(){
-const {data,error}=await supabase.auth.signInWithPassword({
+const { data, error } = await supabase.auth.signInWithPassword({
 email:email.value,
 password:pass.value
 });
@@ -97,14 +103,12 @@ return;
 }
 
 currentUser=data.user;
-await ensureUserRow();
-login.style.display="none";
-app.style.display="block";
+await ensureUser();
+show("app");
 }
 
-async function ensureUserRow(){
-const {data}=await supabase.from("users").select("*").eq("id",currentUser.id).single();
-
+async function ensureUser(){
+const { data } = await supabase.from("users").select("*").eq("id",currentUser.id).single();
 if(!data){
 await supabase.from("users").insert({
 id:currentUser.id,
@@ -115,9 +119,10 @@ email:currentUser.email
 
 async function generate(){
 
-let {data:user}=await supabase.from("users").select("*").eq("id",currentUser.id).single();
+let { data:user } = await supabase.from("users").select("*").eq("id",currentUser.id).single();
 
 const today=new Date().toISOString().slice(0,10);
+
 if(user.last_reset!==today){
 await supabase.from("users").update({daily_usage:0,last_reset:today}).eq("id",currentUser.id);
 user.daily_usage=0;
