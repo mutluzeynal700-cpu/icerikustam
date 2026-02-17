@@ -54,27 +54,23 @@ margin-top:8px;
 
 <div class="box">
 
-<!-- LOGIN -->
 <div id="loginBox">
 <h2>İçerikUstam 🚀</h2>
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Şifre">
-<button id="loginBtn">Giriş Yap</button>
-<button id="goRegister">Kayıt Ol</button>
+<button onclick="login()">Giriş Yap</button>
+<button onclick="showRegister()">Kayıt Ol</button>
 </div>
 
-<!-- REGISTER -->
 <div id="registerBox" class="hidden">
 <h2>Kayıt</h2>
 <input id="rEmail" placeholder="Email">
 <input id="rPassword" type="password" placeholder="Şifre">
-<button id="registerBtn">Kayıt Ol</button>
-<button id="goLogin">Geri</button>
+<button onclick="register()">Kayıt Ol</button>
+<button onclick="showLogin()">Geri</button>
 </div>
 
-<!-- USER PANEL -->
 <div id="appBox" class="hidden">
-
 <h2>Panel 🎯</h2>
 
 <input id="topic" placeholder="Konu">
@@ -84,130 +80,95 @@ margin-top:8px;
 <option>YouTube</option>
 </select>
 
-<button id="produceBtn">İçerik Üret</button>
-
-<h3>Premium Paketler</h3>
+<button onclick="produce()">İçerik Üret</button>
 
 <div class="item">
-Starter — 49₺
+Premium Paket — 49₺
 <button onclick="buyPremium()">Satın Al</button>
 </div>
 
 <h3>İçeriklerim</h3>
 <div id="saved"></div>
 
-<button id="logoutBtn" style="background:#ef4444">Çıkış</button>
-
+<button onclick="logout()" style="background:#ef4444">Çıkış</button>
 </div>
 
-<!-- ADMIN -->
 <div id="adminBox" class="hidden">
 <h2>Admin Panel 👑</h2>
-<div id="userList"></div>
-<button id="logoutBtn2" style="background:#ef4444">Çıkış</button>
+<div id="stats"></div>
+<button onclick="logout()" style="background:#ef4444">Çıkış</button>
 </div>
 
 </div>
 
-<script type="module">
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"
-
-const supabase = createClient(
-"https://leszbkxssduuoytxdjii.supabase.co",
-"sb_publishable_mHIjYnEg9y7HVtBPY_Zr0w_6BcbGNTd"
-)
-
+<script>
 const ADMIN_EMAIL="mslmcanlii@gmail.com"
 
-const loginBox=document.getElementById("loginBox")
-const registerBox=document.getElementById("registerBox")
-const appBox=document.getElementById("appBox")
-const adminBox=document.getElementById("adminBox")
-const saved=document.getElementById("saved")
-
-document.getElementById("goRegister").onclick=()=>{
+function showRegister(){
 loginBox.classList.add("hidden")
 registerBox.classList.remove("hidden")
 }
 
-document.getElementById("goLogin").onclick=()=>{
+function showLogin(){
 registerBox.classList.add("hidden")
 loginBox.classList.remove("hidden")
 }
 
-document.getElementById("registerBtn").onclick = async ()=>{
-const email=document.getElementById("rEmail").value
-const password=document.getElementById("rPassword").value
-
-const {error}=await supabase.auth.signUp({
-email,password,
-options:{emailRedirectTo:window.location.origin}
-})
-
-alert(error?error.message:"Mail onayı gönderildi")
+function register(){
+localStorage.setItem("user",JSON.stringify({
+email:rEmail.value,
+password:rPassword.value
+}))
+alert("Kayıt tamam")
+showLogin()
 }
 
-document.getElementById("loginBtn").onclick = async ()=>{
-const email=document.getElementById("email").value
-const password=document.getElementById("password").value
+function login(){
+const data=JSON.parse(localStorage.getItem("user"))
 
-const {data,error}=await supabase.auth.signInWithPassword({email,password})
-if(error){alert(error.message);return}
-
-if(!data.user.email_confirmed_at){
-alert("Mail onayı yap")
-await supabase.auth.signOut()
+if(!data || data.email!==email.value || data.password!==password.value){
+alert("Hatalı giriş")
 return
 }
 
-startApp(data.user)
-}
-
-async function startApp(user){
-
 loginBox.classList.add("hidden")
 
-if(user.email===ADMIN_EMAIL){
+if(data.email===ADMIN_EMAIL){
 adminBox.classList.remove("hidden")
-loadUsers()
+loadStats()
 }else{
 appBox.classList.remove("hidden")
 loadContents()
 }
 }
 
-function getLocalProfile(userId){
-let data=localStorage.getItem("profile_"+userId)
-if(!data){
-data={premium:false,count:0,date:new Date().toDateString()}
-localStorage.setItem("profile_"+userId,JSON.stringify(data))
-return data
+function getProfile(){
+let p=localStorage.getItem("profile")
+if(!p){
+p={premium:false,count:0,date:new Date().toDateString()}
+localStorage.setItem("profile",JSON.stringify(p))
+return p
 }
-return JSON.parse(data)
+return JSON.parse(p)
 }
 
-function saveLocalProfile(userId,data){
-localStorage.setItem("profile_"+userId,JSON.stringify(data))
+function saveProfile(p){
+localStorage.setItem("profile",JSON.stringify(p))
 }
 
 function tiktokTitle(topic){
 const hooks=[
 "Kimse Bunu Bilmiyor 😳",
-"Hayatını Değiştirir",
-"Bu Taktik Yasaklanmalı",
 "Denemeden Geçme",
-"Gerçekten İşe Yarıyor"
+"Hayatını Değiştirir",
+"Bu Taktik Yasaklanmalı"
 ]
 return hooks[Math.floor(Math.random()*hooks.length)]+" → "+topic
 }
 
-document.getElementById("produceBtn").onclick = async () => {
+function produce(){
 
-const topic=document.getElementById("topic").value
-const platform=document.getElementById("platform").value
-
-const {data:{user}}=await supabase.auth.getUser()
-let profile=getLocalProfile(user.id)
+let profile=getProfile()
 
 const today=new Date().toDateString()
 
@@ -217,60 +178,45 @@ profile.date=today
 }
 
 if(!profile.premium && profile.count>=1){
-alert("Günlük ücretsiz limit doldu")
+alert("Günlük limit doldu")
 return
 }
 
-let text = platform==="TikTok"
-? tiktokTitle(topic)
-: topic+" için "+platform+" içeriği"
+let text = platform.value==="TikTok"
+? tiktokTitle(topic.value)
+: topic.value+" için "+platform.value+" içeriği"
 
-await supabase.from("contents").insert({
-user_id:user.id,
-text:text
-})
+let list=JSON.parse(localStorage.getItem("contents")||"[]")
+list.unshift(text)
+localStorage.setItem("contents",JSON.stringify(list))
 
 profile.count++
-saveLocalProfile(user.id,profile)
+saveProfile(profile)
 
 loadContents()
 }
 
-async function loadContents(){
-const {data:{user}}=await supabase.auth.getUser()
-
-const {data}=await supabase
-.from("contents")
-.select("*")
-.eq("user_id",user.id)
-.order("id",{ascending:false})
-
+function loadContents(){
+const list=JSON.parse(localStorage.getItem("contents")||"[]")
 saved.innerHTML=""
-data?.forEach(i=>{
-saved.innerHTML+=<div class="item">${i.text}</div>
+list.forEach(i=>{
+saved.innerHTML+=<div class="item">${i}</div>
 })
 }
 
-window.buyPremium = async ()=>{
-const {data:{user}}=await supabase.auth.getUser()
-let profile=getLocalProfile(user.id)
-profile.premium=true
-saveLocalProfile(user.id,profile)
+function buyPremium(){
+let p=getProfile()
+p.premium=true
+saveProfile(p)
 alert("Premium aktif 🎉")
 }
 
-async function loadUsers(){
-const {data}=await supabase.from("contents").select("*")
-document.getElementById("userList").innerHTML="Toplam içerik: "+(data?.length||0)
+function loadStats(){
+const list=JSON.parse(localStorage.getItem("contents")||"[]")
+stats.innerText="Toplam içerik: "+list.length
 }
 
-document.getElementById("logoutBtn").onclick=async()=>{
-await supabase.auth.signOut()
-location.reload()
-}
-
-document.getElementById("logoutBtn2").onclick=async()=>{
-await supabase.auth.signOut()
+function logout(){
 location.reload()
 }
 </script>
