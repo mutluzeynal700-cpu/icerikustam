@@ -3,13 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>İçerikUstam</title>
+<title>İçerikUstam AI</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 body{
-margin:0;
-font-family:Arial, sans-serif;
-background:linear-gradient(135deg,#1e3a8a,#020617);
+font-family:sans-serif;
+background:linear-gradient(135deg,#0f172a,#020617);
 color:white;
 display:flex;
 justify-content:center;
@@ -18,28 +19,30 @@ height:100vh;
 }
 
 .box{
-background:rgba(255,255,255,0.08);
-padding:30px;
+width:420px;
+background:rgba(255,255,255,0.05);
+padding:25px;
 border-radius:20px;
-width:350px;
+backdrop-filter:blur(20px);
 }
 
-input,button{
+input,select,textarea,button{
 width:100%;
-padding:12px;
 margin-top:10px;
-border:none;
+padding:12px;
 border-radius:10px;
+border:none;
 }
 
 button{
-background:#22c55e;
+background:linear-gradient(90deg,#22c55e,#06b6d4);
 color:white;
 font-weight:bold;
 cursor:pointer;
 }
 
-.hidden{display:none}
+.panel{display:none}
+.active{display:block}
 </style>
 </head>
 
@@ -47,86 +50,90 @@ cursor:pointer;
 
 <div class="box">
 
-<div id="loginBox">
+<div id="login" class="panel active">
 <h2>Giriş</h2>
 <input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Şifre">
-<button id="loginBtn">Giriş Yap</button>
+<input id="pass" type="password" placeholder="Şifre">
+<button onclick="login()">Giriş Yap</button>
 <button onclick="showRegister()">Kayıt Ol</button>
 </div>
 
-<div id="registerBox" class="hidden">
+<div id="register" class="panel">
 <h2>Kayıt</h2>
 <input id="rEmail" placeholder="Email">
-<input id="rPassword" type="password" placeholder="Şifre">
-<button id="registerBtn">Kayıt Ol</button>
+<input id="rPass" type="password" placeholder="Şifre">
+<button onclick="register()">Kayıt Ol</button>
 <button onclick="showLogin()">Geri</button>
 </div>
 
-<div id="appBox" class="hidden">
-<h2>Hoşgeldin 🎉</h2>
-<button id="logoutBtn">Çıkış</button>
+<div id="app" class="panel">
+<h3 id="userMail"></h3>
+
+<select id="type">
+<option>Instagram Post</option>
+<option>TikTok Video Fikri</option>
+<option>Reklam Metni</option>
+<option>Ürün Açıklaması</option>
+</select>
+
+<input id="topic" placeholder="Konu">
+<textarea id="detail" placeholder="Detay"></textarea>
+
+<button onclick="generate()">İçerik Üret</button>
+
+<div id="result" style="margin-top:15px"></div>
+
+<button onclick="logout()">Çıkış</button>
 </div>
 
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-const SUPABASE_URL = "https://leszbkxssduuoytxdjii.supabase.co";
-const SUPABASE_KEY = "sb_publishable_mHIjYnEg9y7HVtBPY_Zr0w_6BcbGNTd";
+const SUPABASE_URL = "https://leszbkxssduuoytxdjii.supabase.co"
+const SUPABASE_KEY = "sb_publishable_mHIjYnEg9y7HVtBPY_Zr0w_6BcbGNTd"
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-function showRegister(){
-document.getElementById("loginBox").classList.add("hidden");
-document.getElementById("registerBox").classList.remove("hidden");
-}
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
 
 function showLogin(){
-document.getElementById("registerBox").classList.add("hidden");
-document.getElementById("loginBox").classList.remove("hidden");
+login.classList.add("active")
+register.classList.remove("active")
 }
 
-document.getElementById("registerBtn").onclick = async () => {
-const email = document.getElementById("rEmail").value;
-const pass = document.getElementById("rPassword").value;
-
-const { error } = await supabase.auth.signUp({
-email: email,
-password: pass,
-options:{ emailRedirectTo: window.location.origin }
-});
-
-if(error) alert(error.message);
-else alert("Mailine onay gönderildi");
-};
-
-document.getElementById("loginBtn").onclick = async () => {
-const email = document.getElementById("email").value;
-const pass = document.getElementById("password").value;
-
-const { data, error } = await supabase.auth.signInWithPassword({
-email: email,
-password: pass
-});
-
-if(error){ alert(error.message); return; }
-
-if(!data.user.email_confirmed_at){
-alert("Önce mail onayı yap");
-await supabase.auth.signOut();
-return;
+function showRegister(){
+register.classList.add("active")
+login.classList.remove("active")
 }
 
-document.getElementById("loginBox").classList.add("hidden");
-document.getElementById("appBox").classList.remove("hidden");
-};
+async function register(){
+const {error} = await supabase.auth.signUp({
+email:rEmail.value,
+password:rPass.value
+})
+if(error) alert(error.message)
+else alert("Mail onayı gönderildi")
+}
 
-document.getElementById("logoutBtn").onclick = async () => {
-await supabase.auth.signOut();
-location.reload();
-};
+async function login(){
+const {data,error} = await supabase.auth.signInWithPassword({
+email:email.value,
+password:pass.value
+})
+if(error) alert(error.message)
+else{
+userMail.innerText=data.user.email
+login.classList.remove("active")
+app.classList.add("active")
+}
+}
+
+function generate(){
+result.innerText="🔥 AI içerik üretildi\n\nTrend odaklı güçlü metin."
+}
+
+async function logout(){
+await supabase.auth.signOut()
+location.reload()
+}
 </script>
 
 </body>
