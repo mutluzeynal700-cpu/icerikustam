@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>İçerikUstam AI</title>
+<title>İçerikUstam</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/supabase.min.js"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
@@ -168,7 +170,7 @@ button:hover{
 
 <div class="app">
 
-<div class="logo">İçerikUstam AI</div>
+<div class="logo">İçerikUstam</div>
 
 <!-- LOGIN -->
 <div id="login" class="panel active">
@@ -207,6 +209,7 @@ Kayıt Ol
 <option>Reklam Metni</option>
 <option>Ürün Açıklaması</option>
 <option>YouTube Başlık</option>
+<option>TikTok</option>
 </select>
 </div>
 
@@ -235,62 +238,71 @@ Admin Panel
 </div>
 
 <script>
+const supabaseUrl = 'https://<https://leszbkxssduuoytxdjii.supabase.co>'
+const supabaseKey = '<eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxlc3pia3hzc2R1dW95dHhkamlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNzE2NTYsImV4cCI6MjA4Njg0NzY1Nn0.9pooVdILqrtVEXLQ2LmXHkf8jp7epkwaJhMfz6BEfus>'
+const supabase = supabase.createClient(supabaseUrl, supabaseKey)
+
 let user=null
 let limit=3
 
 function show(id){
-document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"))
-document.getElementById(id).classList.add("active")
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"))
+  document.getElementById(id).classList.add("active")
 }
 
-function register(){
-localStorage.setItem("user",JSON.stringify({
-email:rEmail.value,
-pass:rPass.value,
-plan:"free",
-usage:0
-}))
-alert("Kayıt tamam")
-show("login")
+async function register(){
+  const email = document.getElementById('rEmail').value
+  const password = document.getElementById('rPass').value
+
+  const { data, error } = await supabase.auth.signUp({ email, password })
+
+  if(error){
+    alert(error.message)
+  } else {
+    alert('Kaydınız başarıyla gerçekleşmiştir. Lütfen mailinize gidip onaylayınız.')
+    show('login')
+  }
 }
 
-function login(){
-let data=JSON.parse(localStorage.getItem("user"))
-if(!data || data.email!==email.value || data.pass!==pass.value){
-alert("Hatalı giriş")
-return
-}
-user=data
-userEmail.innerText=user.email
-planBadge.innerText=user.plan.toUpperCase()
-if(user.email==="mslmcanlii@gmail.com"){
-admin.style.display="block"
-}
-show("app")
+async function login(){
+  const email = document.getElementById('email').value
+  const password = document.getElementById('pass').value
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+  if(error){
+    alert(error.message)
+  } else if (!data.user.confirmed_at){
+    alert('Lütfen önce mailinizi onaylayınız.')
+  } else {
+    user = data.user
+    userEmail.innerText = user.email
+    planBadge.innerText = 'FREE'
+    if(user.email==="mslmcanlii@gmail.com") admin.style.display="block"
+    show('app')
+  }
 }
 
 function generate(){
-if(user.plan==="free" && user.usage>=limit){
-alert("Günlük limit doldu")
-return
-}
-user.usage++
-localStorage.setItem("user",JSON.stringify(user))
-
-result.innerText =
-"✨ Premium AI içerik üretildi\n\n" +
-"Markanı öne çıkaran profesyonel metin.\n" +
-"Satış odaklı güçlü anlatım.\n\n#ai #trend"
+  if(user.plan==="free" && user.usage>=limit){
+    alert("Günlük limit doldu")
+    return
+  }
+  if(!user.usage) user.usage=0
+  user.usage++
+  result.innerText =
+    "✨ Premium AI içerik üretildi\n\n" +
+    "Markanı öne çıkaran profesyonel metin.\n" +
+    "Satış odaklı güçlü anlatım.\n\n#ai #trend"
 }
 
 function makePremium(){
-user.plan="premium"
-localStorage.setItem("user",JSON.stringify(user))
-planBadge.innerText="PREMIUM"
-alert("Premium aktif")
+  user.plan="premium"
+  planBadge.innerText="PREMIUM"
+  alert("Premium aktif")
 }
 
-function logout(){location.reload()}
+function logout(){ location.reload() }
 </script>
 
 </body>
