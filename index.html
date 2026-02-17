@@ -96,8 +96,8 @@ Admin Panel
 </div>
 
 <script>
-const supabaseUrl = 'https://<https://leszbkxssduuoytxdjii.supabase.co>'
-const supabaseKey = '<eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxlc3pia3hzc2R1dW95dHhkamlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNzE2NTYsImV4cCI6MjA4Njg0NzY1Nn0.9pooVdILqrtVEXLQ2LmXHkf8jp7epkwaJhMfz6BEfus>'
+const supabaseUrl = 'https://leszbkxssduuoytxdjii.supabase.co'
+const supabaseKey = '<eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxlc3pia3hzc2R1dW95dHhkamlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNzE2NTYsImV4cCI6MjA4Njg0NzY1Nn0.9pooVdILqrtVEXLQ2LmXHkf8jp7epkwaJhMfz6BEfus>' // Kendi anon/public key’inizi buraya koyun
 const supabase = supabase.createClient(supabaseUrl, supabaseKey)
 
 let user=null
@@ -138,12 +138,12 @@ async function login(){
   planBadge.innerText = 'FREE'
 
   // Profil tablosuna ekle / eğer yoksa
-  const { data: profile, error: profErr } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
   if(!profile){
     await supabase.from('profiles').insert([{id:user.id, plan:'free', usage_count:0}])
   }
 
-  if(user.email==="mslmcanlii@gmail.com") admin.style.display="block"
+  if(user.email==="admin@site.com") admin.style.display="block"
   show('app')
 }
 
