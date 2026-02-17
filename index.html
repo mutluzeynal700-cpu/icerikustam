@@ -250,21 +250,37 @@ function show(id){
   document.getElementById(id).classList.add("active")
 }
 
-async function register(){
+// Kayıt ol + mail doğrulama + profil tablosu
+async function register() {
   const email = document.getElementById('rEmail').value
   const password = document.getElementById('rPass').value
 
-  const { data, error } = await supabase.auth.signUp({ email, password })
+  const { data, error } = await supabase.auth.signUp(
+    { email, password },
+    { emailRedirectTo: window.location.href } // mail onaylandıktan sonra geri yönlensin
+  )
 
   if(error){
     alert(error.message)
-  } else {
-    alert('Kaydınız başarıyla gerçekleşmiştir. Lütfen mailinize gidip onaylayınız.')
-    show('login')
+    return
   }
+
+  // Profil tablosuna ekle
+  if(data.user){
+    const { error: profileError } = await supabase.from('profiles').insert([
+      { id: data.user.id, plan: 'free', usage_count: 0 }
+    ])
+    if(profileError){
+      console.error(profileError)
+    }
+  }
+
+  alert('Kaydınız başarıyla gerçekleşmiştir. Lütfen mailinize gidip onaylayınız.')
+  show('login')
 }
 
-async function login(){
+// Giriş
+async function login() {
   const email = document.getElementById('email').value
   const password = document.getElementById('pass').value
 
@@ -283,26 +299,37 @@ async function login(){
   }
 }
 
-function generate(){
-  if(user.plan==="free" && user.usage>=limit){
-    alert("Günlük limit doldu")
+// AI içerik üret
+async function generate(){
+  if(!user) return
+  // Kullanıcı planı ve kullanım sayısı Supabase profiles tablosundan alınabilir
+  const { data: profileData, error } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+  if(error){ console.error(error); return }
+
+  if(profileData.plan==='free' && profileData.usage_count >= limit){
+    alert('Günlük limit doldu')
     return
   }
-  if(!user.usage) user.usage=0
-  user.usage++
+
+  // Kullanımı artır
+  await supabase.from('profiles').update({ usage_count: profileData.usage_count +1 }).eq('id', user.id)
+
   result.innerText =
     "✨ Premium AI içerik üretildi\n\n" +
     "Markanı öne çıkaran profesyonel metin.\n" +
     "Satış odaklı güçlü anlatım.\n\n#ai #trend"
 }
 
-function makePremium(){
-  user.plan="premium"
+// Premium ver (admin)
+async function makePremium(){
+  if(!user) return
+  await supabase.from('profiles').update({ plan:'premium' }).eq('id', user.id)
   planBadge.innerText="PREMIUM"
   alert("Premium aktif")
 }
 
-function logout(){ location.reload() }
+// Çıkış
+function logout(){ supabase.auth.signOut(); location.reload() }
 </script>
 
 </body>
