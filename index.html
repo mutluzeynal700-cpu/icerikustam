@@ -3,36 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>İçerikUstam AI</title>
+<title>İçerikUstam</title>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui}
-
 body{
-background:linear-gradient(135deg,#020617,#1e3a8a,#312e81);
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,#020617,#1e3a8a);
 color:white;
-min-height:100vh;
 display:flex;
 justify-content:center;
 align-items:center;
+height:100vh;
 }
 
-.card{
-width:420px;
+.box{
 background:rgba(255,255,255,0.08);
-backdrop-filter:blur(20px);
 padding:30px;
 border-radius:20px;
-box-shadow:0 0 40px rgba(0,0,0,0.5);
-animation:fade 0.5s ease;
+width:340px;
 }
 
-@keyframes fade{
-from{opacity:0;transform:translateY(20px)}
-to{opacity:1}
-}
-
-input,select,button{
+input,button{
 width:100%;
 padding:12px;
 margin-top:10px;
@@ -41,252 +33,99 @@ border-radius:10px;
 }
 
 button{
-background:linear-gradient(90deg,#22c55e,#4ade80);
+background:#22c55e;
 color:white;
 font-weight:bold;
 cursor:pointer;
 }
 
-button:hover{transform:scale(1.03)}
-
 .hidden{display:none}
-
-.item{
-background:rgba(255,255,255,0.05);
-padding:10px;
-border-radius:10px;
-margin-top:8px;
-}
 </style>
 </head>
 
 <body>
 
-<div class="card">
+<div class="box">
 
-<!-- LOGIN -->
 <div id="loginBox">
-<h2>İçerikUstam 🚀</h2>
+<h2>Giriş</h2>
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Şifre">
-<button onclick="login()">Giriş Yap</button>
-<button onclick="showRegister()">Kayıt Ol</button>
+<button id="loginBtn">Giriş Yap</button>
+<button id="goRegister">Kayıt Ol</button>
 </div>
 
-<!-- REGISTER -->
 <div id="registerBox" class="hidden">
-<h2>Kayıt Ol</h2>
+<h2>Kayıt</h2>
 <input id="rEmail" placeholder="Email">
 <input id="rPassword" type="password" placeholder="Şifre">
-<button onclick="register()">Kayıt Ol</button>
-<button onclick="showLogin()">Geri</button>
+<button id="registerBtn">Kayıt Ol</button>
+<button id="goLogin">Geri</button>
 </div>
 
-<!-- USER PANEL -->
 <div id="appBox" class="hidden">
-
-<h2>Panel 🎯</h2>
-
-<input id="topic" placeholder="İçerik konusu">
-<select id="platform">
-<option>TikTok</option>
-<option>Instagram</option>
-<option>YouTube</option>
-</select>
-
-<button onclick="produce()">İçerik Üret</button>
-
-<h3>Premium Paketler 💎</h3>
-
-<div class="item">
-Starter — 49₺
-<button onclick="buyPackage('Starter',49)">Satın Al</button>
-</div>
-
-<div class="item">
-Pro — 99₺
-<button onclick="buyPackage('Pro',99)">Satın Al</button>
-</div>
-
-<h3>Kayıtlı İçerikler</h3>
-<div id="saved"></div>
-
-<button onclick="logout()" style="background:#ef4444;margin-top:15px">Çıkış</button>
-
-</div>
-
-<!-- ADMIN PANEL -->
-<div id="adminBox" class="hidden">
-<h2>Admin Panel 👑</h2>
-<div id="userList"></div>
-<button onclick="logout()" style="background:#ef4444;margin-top:15px">Çıkış</button>
+<h2>Hoşgeldin 🎉</h2>
+<button id="logoutBtn">Çıkış</button>
 </div>
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm"
 
-<script>
-const SUPABASE_URL="https://leszbkxssduuoytxdjii.supabase.co";
-const SUPABASE_KEY="sb_publishable_mHIjYnEg9y7HVtBPY_Zr0w_6BcbGNTd";
-const ADMIN_EMAIL="mslmcanlii@gmail.com";
+const supabase = createClient(
+"https://leszbkxssduuoytxdjii.supabase.co",
+"sb_publishable_mHIjYnEg9y7HVtBPY_Zr0w_6BcbGNTd"
+)
 
-const supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const loginBox = document.getElementById("loginBox")
+const registerBox = document.getElementById("registerBox")
+const appBox = document.getElementById("appBox")
 
-function showRegister(){loginBox.classList.add("hidden");registerBox.classList.remove("hidden")}
-function showLogin(){registerBox.classList.add("hidden");loginBox.classList.remove("hidden")}
+document.getElementById("goRegister").onclick=()=>{
+loginBox.classList.add("hidden")
+registerBox.classList.remove("hidden")
+}
 
-async function register(){
-const {data,error}=await supabase.auth.signUp({
-email:rEmail.value,
-password:rPassword.value,
+document.getElementById("goLogin").onclick=()=>{
+registerBox.classList.add("hidden")
+loginBox.classList.remove("hidden")
+}
+
+document.getElementById("registerBtn").onclick = async ()=>{
+const email=document.getElementById("rEmail").value
+const password=document.getElementById("rPassword").value
+
+const {error}=await supabase.auth.signUp({
+email,
+password,
 options:{emailRedirectTo:window.location.origin}
-});
+})
 
-if(error) return alert(error.message);
-
-await supabase.from("profiles").insert({
-id:data.user.id,
-email:data.user.email
-});
-
-alert("Mail onayı gönderildi");
+alert(error?error.message:"Mail onayı gönderildi")
 }
 
-async function login(){
-const {data,error}=await supabase.auth.signInWithPassword({
-email:email.value,
-password:password.value
-});
+document.getElementById("loginBtn").onclick = async ()=>{
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
 
-if(error) return alert(error.message);
+const {data,error}=await supabase.auth.signInWithPassword({email,password})
 
-startApp(data.user);
+if(error){alert(error.message);return}
+
+if(!data.user.email_confirmed_at){
+alert("Mail onayı yap")
+await supabase.auth.signOut()
+return
 }
 
-async function startApp(user){
-
-loginBox.classList.add("hidden");
-
-if(user.email===ADMIN_EMAIL){
-adminBox.classList.remove("hidden");
-loadUsers();
-}else{
-appBox.classList.remove("hidden");
-loadContents();
-}
+loginBox.classList.add("hidden")
+appBox.classList.remove("hidden")
 }
 
-function tiktokTitle(topic){
-const hooks=[
-"Kimse Bunu Bilmiyor 😳",
-"Hayatını Değiştirir",
-"Bu Taktik Yasaklanmalı",
-"Denemeden Geçme",
-"Gerçekten İşe Yarıyor"
-];
-return hooks[Math.floor(Math.random()*hooks.length)]+" → "+topic;
-}
-
-async function produce(){
-
-const {data:{user}}=await supabase.auth.getUser();
-
-let {data:profile}=await supabase
-.from("profiles")
-.select("*")
-.eq("id",user.id)
-.single();
-
-const today=new Date().toDateString();
-
-if(profile.last_date!=today){
-await supabase.from("profiles")
-.update({daily_count:0,last_date:today})
-.eq("id",user.id);
-profile.daily_count=0;
-}
-
-if(!profile.premium && profile.daily_count>=1){
-alert("Günlük ücretsiz limit doldu");
-return;
-}
-
-let text;
-
-if(platform.value==="TikTok"){
-text=tiktokTitle(topic.value);
-}else{
-text=topic.value+" için "+platform.value+" içeriği ✨";
-}
-
-await supabase.from("contents").insert({
-user_id:user.id,
-text:text
-});
-
-await supabase.from("profiles")
-.update({daily_count:profile.daily_count+1})
-.eq("id",user.id);
-
-loadContents();
-}
-
-async function loadContents(){
-const {data:{user}}=await supabase.auth.getUser();
-
-const {data}=await supabase
-.from("contents")
-.select("*")
-.eq("user_id",user.id)
-.order("id",{ascending:false});
-
-saved.innerHTML="";
-data.forEach(i=>{
-saved.innerHTML+=<div class="item">${i.text}</div>;
-});
-}
-
-async function buyPackage(name,price){
-const {data:{user}}=await supabase.auth.getUser();
-
-await supabase.from("purchases").insert({
-user_id:user.id,
-package_name:name,
-price:price
-});
-
-await supabase.from("profiles")
-.update({premium:true})
-.eq("id",user.id);
-
-alert("Premium aktif 🎉");
-}
-
-async function loadUsers(){
-const {data}=await supabase.from("profiles").select("*");
-
-userList.innerHTML="";
-data.forEach(u=>{
-userList.innerHTML+=`
-<div class="item">
-${u.email}
-<button onclick="makePremium('${u.id}')">Premium Yap</button>
-</div>`;
-});
-}
-
-async function makePremium(id){
-await supabase.from("profiles")
-.update({premium:true})
-.eq("id",id);
-
-loadUsers();
-}
-
-async function logout(){
-await supabase.auth.signOut();
-location.reload();
+document.getElementById("logoutBtn").onclick = async ()=>{
+await supabase.auth.signOut()
+location.reload()
 }
 </script>
 
