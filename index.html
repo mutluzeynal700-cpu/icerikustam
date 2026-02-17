@@ -3,38 +3,174 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>İçerikUstam</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/supabase.min.js"></script>
+<title>İçerikUstam AI</title>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
-body{height:100vh;background: radial-gradient(circle at 20% 20%,#1e3a8a,#020617 60%);color:white;display:flex;justify-content:center;align-items:center;overflow:hidden}
-body::before{content:"";position:fixed;width:1200px;height:1200px;background:radial-gradient(circle,#22c55e33,transparent 60%);animation:float 10s infinite alternate;z-index:-1;pointer-events:none}
-body::after{content:"";position:fixed;width:900px;height:900px;background:radial-gradient(circle,#a855f733,transparent 60%);animation:float2 12s infinite alternate;z-index:-1;pointer-events:none}
-@keyframes float{from{transform:translate(-200px,-200px)}to{transform:translate(200px,200px)}}
-@keyframes float2{from{transform:translate(200px,-150px)}to{transform:translate(-150px,200px)}}
-.app{width:95%;max-width:1000px;background:rgba(255,255,255,0.06);backdrop-filter:blur(25px);border-radius:26px;padding:30px;box-shadow:0 40px 100px rgba(0,0,0,0.7)}
-.logo{font-size:34px;font-weight:800;text-align:center;margin-bottom:25px;background:linear-gradient(90deg,#22c55e,#06b6d4,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.panel{display:none}.active{display:block}
-.card{background:rgba(255,255,255,0.05);padding:18px;border-radius:18px;margin-bottom:15px;transition:0.3s;border:1px solid rgba(255,255,255,0.08)}
-.card:hover{transform:translateY(-4px);box-shadow:0 10px 30px rgba(0,0,0,0.5)}
-input,select,textarea{width:100%;padding:14px;border:none;border-radius:12px;background:rgba(0,0,0,0.5);color:white;margin-top:8px;outline:none}
-button{width:100%;padding:15px;border:none;border-radius:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:12px;background:linear-gradient(90deg,#22c55e,#06b6d4);color:white;transition:0.25s}
-button:hover{transform:scale(1.03);box-shadow:0 10px 40px rgba(34,197,94,0.4)}
-.secondary{background:linear-gradient(90deg,#f59e0b,#ef4444)}
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;font-size:14px}
-.badge{padding:6px 14px;border-radius:999px;background:linear-gradient(90deg,#f59e0b,#ef4444);font-size:13px}
-.result{margin-top:18px;padding:18px;border-radius:14px;background:rgba(0,0,0,0.6);min-height:120px;white-space:pre-wrap}
-.admin{margin-top:15px;padding:15px;border-radius:14px;background:rgba(168,85,247,0.2)}
+
+/* ANİMASYONLU ARKA PLAN */
+body{
+  height:100vh;
+  background: radial-gradient(circle at 20% 20%,#1e3a8a,#020617 60%);
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+}
+
+body::before{
+  content:"";
+  position:fixed;
+  width:1200px;
+  height:1200px;
+  background:radial-gradient(circle,#22c55e33,transparent 60%);
+  animation:float 10s infinite alternate;
+  z-index:-1;
+  pointer-events:none;
+}
+
+body::after{
+  content:"";
+  position:fixed;
+  width:900px;
+  height:900px;
+  background:radial-gradient(circle,#a855f733,transparent 60%);
+  animation:float2 12s infinite alternate;
+  z-index:-1;
+  pointer-events:none;
+}
+
+@keyframes float{
+  from{transform:translate(-200px,-200px)}
+  to{transform:translate(200px,200px)}
+}
+
+@keyframes float2{
+  from{transform:translate(200px,-150px)}
+  to{transform:translate(-150px,200px)}
+}
+
+/* ANA KUTU */
+.app{
+  width:95%;
+  max-width:1000px;
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(25px);
+  border-radius:26px;
+  padding:30px;
+  box-shadow:0 40px 100px rgba(0,0,0,0.7);
+}
+
+/* LOGO */
+.logo{
+  font-size:34px;
+  font-weight:800;
+  text-align:center;
+  margin-bottom:25px;
+  background:linear-gradient(90deg,#22c55e,#06b6d4,#a855f7);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+
+/* PANEL */
+.panel{display:none}
+.active{display:block}
+
+/* KART */
+.card{
+  background:rgba(255,255,255,0.05);
+  padding:18px;
+  border-radius:18px;
+  margin-bottom:15px;
+  transition:0.3s;
+  border:1px solid rgba(255,255,255,0.08);
+}
+
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* INPUT */
+input,select,textarea{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:rgba(0,0,0,0.5);
+  color:white;
+  margin-top:8px;
+  outline:none;
+}
+
+/* BUTON */
+button{
+  width:100%;
+  padding:15px;
+  border:none;
+  border-radius:14px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:12px;
+  background:linear-gradient(90deg,#22c55e,#06b6d4);
+  color:white;
+  transition:0.25s;
+}
+
+button:hover{
+  transform:scale(1.03);
+  box-shadow:0 10px 40px rgba(34,197,94,0.4);
+}
+
+.secondary{
+  background:linear-gradient(90deg,#f59e0b,#ef4444);
+}
+
+/* ÜST BAR */
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:15px;
+  font-size:14px;
+}
+
+.badge{
+  padding:6px 14px;
+  border-radius:999px;
+  background:linear-gradient(90deg,#f59e0b,#ef4444);
+  font-size:13px;
+}
+
+/* SONUÇ */
+.result{
+  margin-top:18px;
+  padding:18px;
+  border-radius:14px;
+  background:rgba(0,0,0,0.6);
+  min-height:120px;
+  white-space:pre-wrap;
+}
+
+/* ADMIN */
+.admin{
+  margin-top:15px;
+  padding:15px;
+  border-radius:14px;
+  background:rgba(168,85,247,0.2);
+}
 </style>
 </head>
+
 <body>
 
 <div class="app">
 
-<div class="logo">İçerikUstam</div>
+<div class="logo">İçerikUstam AI</div>
 
+<!-- LOGIN -->
 <div id="login" class="panel active">
 <div class="card">
 Giriş Yap
@@ -45,6 +181,7 @@ Giriş Yap
 </div>
 </div>
 
+<!-- REGISTER -->
 <div id="register" class="panel">
 <div class="card">
 Kayıt Ol
@@ -55,7 +192,9 @@ Kayıt Ol
 </div>
 </div>
 
+<!-- APP -->
 <div id="app" class="panel">
+
 <div class="topbar">
 <div id="userEmail"></div>
 <div class="badge" id="planBadge">FREE</div>
@@ -68,7 +207,6 @@ Kayıt Ol
 <option>Reklam Metni</option>
 <option>Ürün Açıklaması</option>
 <option>YouTube Başlık</option>
-<option>TikTok</option>
 </select>
 </div>
 
@@ -91,80 +229,68 @@ Detaylar
 Admin Panel
 <button onclick="makePremium()">Premium Ver</button>
 </div>
+
 </div>
 
 </div>
 
 <script>
-const supabaseUrl = 'https://leszbkxssduuoytxdjii.supabase.co'
-const supabaseKey = '<eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxlc3pia3hzc2R1dW95dHhkamlpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNzE2NTYsImV4cCI6MjA4Njg0NzY1Nn0.9pooVdILqrtVEXLQ2LmXHkf8jp7epkwaJhMfz6BEfus>' // Kendi anon/public key’inizi buraya koyun
-const supabase = supabase.createClient(supabaseUrl, supabaseKey)
-
 let user=null
 let limit=3
 
 function show(id){
-  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"))
-  document.getElementById(id).classList.add("active")
+document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"))
+document.getElementById(id).classList.add("active")
 }
 
-// Kayıt: sadece mail doğrulama gönder, alert göster
-async function register(){
-  const email = document.getElementById('rEmail').value
-  const password = document.getElementById('rPass').value
-
-  const { data, error } = await supabase.auth.signUp(
-    { email, password },
-    { emailRedirectTo: window.location.href }
-  )
-
-  if(error){ alert(error.message); return }
-  alert('Kaydınız başarıyla gerçekleşmiştir. Lütfen mailinize gidip onaylayınız.')
-  show('login')
+function register(){
+localStorage.setItem("user",JSON.stringify({
+email:rEmail.value,
+pass:rPass.value,
+plan:"free",
+usage:0
+}))
+alert("Kayıt tamam")
+show("login")
 }
 
-// Login: mail onayı ve profil tablosunu oluşturma
-async function login(){
-  const email = document.getElementById('email').value
-  const password = document.getElementById('pass').value
-
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-  if(error){ alert(error.message); return }
-
-  if(!data.user.confirmed_at){ alert('Lütfen önce mailinizi onaylayınız.'); return }
-
-  user = data.user
-  userEmail.innerText = user.email
-  planBadge.innerText = 'FREE'
-
-  // Profil tablosuna ekle / eğer yoksa
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-  if(!profile){
-    await supabase.from('profiles').insert([{id:user.id, plan:'free', usage_count:0}])
-  }
-
-  if(user.email==="admin@site.com") admin.style.display="block"
-  show('app')
+function login(){
+let data=JSON.parse(localStorage.getItem("user"))
+if(!data || data.email!==email.value || data.pass!==pass.value){
+alert("Hatalı giriş")
+return
+}
+user=data
+userEmail.innerText=user.email
+planBadge.innerText=user.plan.toUpperCase()
+if(user.email==="mslmcanlii@gmail.com"){
+admin.style.display="block"
+}
+show("app")
 }
 
-// AI içerik üret
-async function generate(){
-  if(!user) return
-  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
-  if(profile.plan==='free' && profile.usage_count >= limit){ alert('Günlük limit doldu'); return }
-  await supabase.from('profiles').update({ usage_count: profile.usage_count+1 }).eq('id', user.id)
-  result.innerText = "✨ Premium AI içerik üretildi\n\nMarkanı öne çıkaran profesyonel metin.\nSatış odaklı güçlü anlatım.\n\n#ai #trend"
+function generate(){
+if(user.plan==="free" && user.usage>=limit){
+alert("Günlük limit doldu")
+return
+}
+user.usage++
+localStorage.setItem("user",JSON.stringify(user))
+
+result.innerText =
+"✨ Premium AI içerik üretildi\n\n" +
+"Markanı öne çıkaran profesyonel metin.\n" +
+"Satış odaklı güçlü anlatım.\n\n#ai #trend"
 }
 
-// Premium ver
-async function makePremium(){
-  if(!user) return
-  await supabase.from('profiles').update({plan:'premium'}).eq('id', user.id)
-  planBadge.innerText="PREMIUM"
-  alert("Premium aktif")
+function makePremium(){
+user.plan="premium"
+localStorage.setItem("user",JSON.stringify(user))
+planBadge.innerText="PREMIUM"
+alert("Premium aktif")
 }
 
-function logout(){ supabase.auth.signOut(); location.reload() }
+function logout(){location.reload()}
 </script>
 
 </body>
